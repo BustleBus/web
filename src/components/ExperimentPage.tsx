@@ -294,7 +294,10 @@ export default function ExperimentPage() {
               </div>
               <div className="space-y-2">
                 <Label>노선</Label>
-                <Select value={selectedRoute} onValueChange={setSelectedRoute}>
+                <Select
+                  value={selectedRoute}
+                  onValueChange={(value) => setSelectedRoute(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="노선 선택" />
                   </SelectTrigger>
@@ -455,7 +458,7 @@ export default function ExperimentPage() {
                 <Label>시간대 파일 선택</Label>
                 <Select
                   value={activeTimeFile}
-                  onValueChange={setActiveTimeFile}
+                  onValueChange={(value) => setActiveTimeFile(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="시간대별_..csv 선택" />

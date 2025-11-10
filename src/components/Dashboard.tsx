@@ -210,7 +210,10 @@ const Dashboard: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             노선 선택
           </label>
-          <Select onValueChange={setSelectedRoute} value={selectedRoute || ""}>
+          <Select
+            onValueChange={(value) => setSelectedRoute(value || null)}
+            value={selectedRoute || ""}
+          >
             <SelectTrigger>
               <SelectValue placeholder="노선을 선택하세요" />
             </SelectTrigger>
