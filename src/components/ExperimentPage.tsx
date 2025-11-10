@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,12 @@ import { pivotToLong } from "@/lib/fileParser";
 import { DataTable } from "@/components/DataTable";
 import { FileLoader } from "@/components/FileLoader";
 
+const LoadingSpinner = () => (
+  <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 /**
  * 버스 배차 데이터 뷰어 (단일 파일 컴포넌트)
  *
@@ -49,6 +55,7 @@ import { FileLoader } from "@/components/FileLoader";
 export default function ExperimentPage() {
   const [files, setFiles] = useState<ParsedFile[]>([]); // {name, kind, data}
   const [testGroup, setTestGroup] = useState<'A' | 'B'>('A');
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setTestGroup(Math.random() < 0.5 ? 'A' : 'B');
@@ -178,11 +185,13 @@ export default function ExperimentPage() {
   }, [activeTimeFile, timeFiles]);
 
   const onFilesLoaded = (parsed: ParsedFile[]) => {
-    setFiles((prev) => {
-      // 동일 이름 덮어쓰기
-      const map = new Map(prev.map((p) => [p.name, p]));
-      for (const p of parsed) map.set(p.name, p);
-      return Array.from(map.values());
+    startTransition(() => {
+      setFiles((prev) => {
+        // 동일 이름 덮어쓰기
+        const map = new Map(prev.map((p) => [p.name, p]));
+        for (const p of parsed) map.set(p.name, p);
+        return Array.from(map.values());
+      });
     });
   };
 
@@ -198,7 +207,8 @@ export default function ExperimentPage() {
 
       <FileLoader onLoaded={onFilesLoaded} />
 
-      <Tabs defaultValue="route" className="w-full">
+      <Tabs defaultValue="route" className="w-full relative">
+        {isPending && <LoadingSpinner />}
         <TabsList className="grid grid-cols-3 w-full max-w-xl">
           <TabsTrigger value="route">노선 기반</TabsTrigger>
           <TabsTrigger value="stop">정류장 기반</TabsTrigger>
