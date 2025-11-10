@@ -1,6 +1,11 @@
-import React, { useState, useEffect, useMemo, useTransition } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useTransition,
+  Suspense,
+} from "react";
 import { pivotToLongRideAlight } from "../lib/fileParser";
-import { LongData } from "../lib/types";
 import {
   Select,
   SelectContent,
@@ -8,23 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { DataTable } from "./DataTable";
 import { Loader2 } from "lucide-react";
 import { VirtualizedCombobox } from "./ui/combobox";
+import { Button } from "./ui/button";
+import type { ApexOptions } from "apexcharts";
+
+const Chart = React.lazy(() => import("react-apexcharts"));
 
 const Dashboard: React.FC = () => {
-  const [parsedData, setParsedData] = useState<Record<string, any>[]>([]);
+  const [parsedData, setParsedData] = useState<Record<string, string>[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [chartType, setChartType] = useState<"bar" | "line">("bar");
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,8 +124,66 @@ const Dashboard: React.FC = () => {
   }, [filteredData]);
 
   const stationOptions = useMemo(() => {
-    return stations.map(station => ({ value: station, label: station }));
+    return stations.map((station) => ({ value: station, label: station }));
   }, [stations]);
+
+  const chartOptions: ApexOptions = useMemo(() => {
+    return {
+      chart: {
+        type: chartType,
+        height: 400,
+        animations: {
+          enabled: true,
+        },
+        toolbar: {
+          show: false,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: chartData.map((d) => d.time),
+        title: {
+          text: "시간",
+        },
+      },
+      yaxis: {
+        title: {
+          text: "인원수",
+        },
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+      },
+      legend: {
+        position: "top",
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "55%",
+        },
+      },
+      stroke: {
+        width: chartType === 'line' ? 3 : 1,
+      }
+    };
+  }, [chartData, chartType]);
+
+  const chartSeries = useMemo(() => {
+    return [
+      {
+        name: "승차",
+        data: chartData.map((d) => d.boarding),
+      },
+      {
+        name: "하차",
+        data: chartData.map((d) => d.alighting),
+      },
+    ];
+  }, [chartData]);
 
   const showOverallLoading = isLoadingInitialData || isPending;
 
@@ -183,18 +241,41 @@ const Dashboard: React.FC = () => {
 
       <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">시간대별 승하차 인원</h2>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="boarding" fill="#8884d8" name="승차" />
-              <Bar dataKey="alighting" fill="#82ca9d" name="하차" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold">시간대별 승하차 인원</h2>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant={chartType === "bar" ? "secondary" : "ghost"}
+                size="sm"
+                className="border w-16"
+                onClick={() => setChartType("bar")}
+              >
+                막대
+              </Button>
+              <Button
+                variant={chartType === "line" ? "secondary" : "ghost"}
+                size="sm"
+                className="border w-16"
+                onClick={() => setChartType("line")}
+              >
+                선
+              </Button>
+            </div>
+          </div>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            }
+          >
+            <Chart
+              options={chartOptions}
+              series={chartSeries}
+              type={chartType}
+              height={400}
+            />
+          </Suspense>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-2">상세 데이터</h2>

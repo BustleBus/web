@@ -1,4 +1,10 @@
-import { useMemo, useState, useEffect, useTransition } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useTransition,
+  Suspense,
+} from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,26 +18,16 @@ import {
 } from "@/components/ui/select";
 import {
   VirtualizedCombobox,
-  type ComboboxOption,
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
-import { BarChart2 } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
+import { BarChart2, Loader2 } from "lucide-react";
 import type { ParsedFile, LongData } from "@/lib/types";
 import { pivotToLong } from "@/lib/fileParser";
 import { DataTable } from "@/components/DataTable";
 import { FileLoader } from "@/components/FileLoader";
+import type { ApexOptions } from "apexcharts";
+
+const Chart = React.lazy(() => import("react-apexcharts"));
 
 const LoadingSpinner = () => (
   <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
@@ -176,6 +172,66 @@ export default function ExperimentPage() {
     stopPivotAlight,
   ]);
 
+  const chartOptions: ApexOptions = useMemo(() => {
+    const sortedData = timeSeries.sort((a, b) => a.time.localeCompare(b.time));
+    return {
+      chart: {
+        type: testGroup === "A" ? "line" : "bar",
+        height: "100%",
+        animations: {
+          enabled: true,
+        },
+        toolbar: {
+          show: false,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: sortedData.map((d) => d.time),
+        title: {
+          text: "시간",
+        },
+      },
+      yaxis: {
+        title: {
+          text: "합계",
+        },
+        labels: {
+          formatter: (value) => {
+            return Math.round(value).toString();
+          },
+        },
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+      },
+      legend: {
+        position: "top",
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+        },
+      },
+      stroke: {
+        width: testGroup === 'A' ? 3 : 1,
+      }
+    };
+  }, [timeSeries, testGroup]);
+
+  const chartSeries = useMemo(() => {
+    const sortedData = timeSeries.sort((a, b) => a.time.localeCompare(b.time));
+    return [
+      {
+        name: "합계",
+        data: sortedData.map((d) => d.value),
+      },
+    ];
+  }, [timeSeries]);
+
   // 시간대별 CSV 표시 (선택)
   const [activeTimeFile, setActiveTimeFile] = useState("");
   const activeTimeRows = useMemo(() => {
@@ -291,37 +347,20 @@ export default function ExperimentPage() {
                 시간대 추이
               </h3>
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  {testGroup === 'A' ? (
-                    <LineChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        name="합계"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  ) : (
-                    <BarChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="합계" fill="#8884d8" />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center items-center h-full">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  }
+                >
+                  <Chart
+                    options={chartOptions}
+                    series={chartSeries}
+                    type={testGroup === "A" ? "line" : "bar"}
+                    height="100%"
+                  />
+                </Suspense>
               </div>
             </Card>
           </div>
@@ -389,37 +428,20 @@ export default function ExperimentPage() {
                 시간대 추이
               </h3>
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  {testGroup === 'A' ? (
-                    <LineChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        name="합계"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  ) : (
-                    <BarChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="합계" fill="#8884d8" />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center items-center h-full">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  }
+                >
+                  <Chart
+                    options={chartOptions}
+                    series={chartSeries}
+                    type={testGroup === "A" ? "line" : "bar"}
+                    height="100%"
+                  />
+                </Suspense>
               </div>
             </Card>
           </div>
