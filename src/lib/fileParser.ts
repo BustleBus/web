@@ -4,6 +4,8 @@ import type { FileKind, LongData } from "./types";
 
 export function detectFileKind(name: string): { kind: FileKind; extension: string } {
   const extension = name.split(".").pop()?.toLowerCase() || "";
+  if (name.includes("승하차_인원_정보"))
+    return { kind: "ride_alight_by_hour", extension };
   if (name.includes("정류장별_승차피벗_모음"))
     return { kind: "stop_pivot_board", extension };
   if (name.includes("정류장별_하차피벗_모음"))
@@ -24,7 +26,7 @@ export async function parseCsvFile(
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      encoding: "utf-8",
+      encoding: "EUC-KR",
       complete: (res) => resolve(res.data as Record<string, string>[]),
       error: (err) => reject(err),
     });
@@ -68,7 +70,8 @@ export async function parseFile(
 
 export function pivotToLong(
   rows: Record<string, string>[],
-  indexKeys: string[]
+  indexKeys: string[],
+  type: 'boarding' | 'alighting' = 'boarding'
 ): LongData[] {
   if (!rows || rows.length === 0) return [];
   const timeCols = Object.keys(rows[0]).filter((k) =>
@@ -83,11 +86,43 @@ export function pivotToLong(
       out.push({
         time: hh,
         value: val,
+        type,
         ...indexKeys.reduce(
           (acc, key) => ({ ...acc, [key]: r[key] }),
           {} as Record<string, string>
         ),
       });
+    }
+  }
+  return out;
+}
+
+export function pivotToLongRideAlight(
+  rows: Record<string, string>[],
+  indexKeys: string[]
+): LongData[] {
+  if (!rows || rows.length === 0) return [];
+  const rideAlightRegex = /^(\d{1,2})시(승차|하차)총승객수$/;
+  const timeCols = Object.keys(rows[0]).filter((k) => rideAlightRegex.test(k));
+
+  const out: LongData[] = [];
+  for (const r of rows) {
+    for (const c of timeCols) {
+      const match = c.match(rideAlightRegex);
+      if (match) {
+        const hh = match[1];
+        const type = match[2] === '승차' ? 'boarding' : 'alighting';
+        const val = Number(r[c] ?? 0);
+        out.push({
+          time: hh,
+          value: val,
+          type,
+          ...indexKeys.reduce(
+            (acc, key) => ({ ...acc, [key]: r[key] }),
+            {} as Record<string, string>
+          ),
+        });
+      }
     }
   }
   return out;
