@@ -4,6 +4,7 @@ export type FileKind =
   | "route_pivot_board"
   | "route_pivot_alight"
   | "by_time"
+  | "ride_alight_by_hour"
   | "excel"
   | "unknown";
 
@@ -16,5 +17,7 @@ export interface ParsedFile {
 export interface LongData {
   time: string;
   value: number;
+  type: "boarding" | "alighting";
   [key: string]: string | number;
 }
+
