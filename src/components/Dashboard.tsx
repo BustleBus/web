@@ -1,7 +1,11 @@
-
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useTransition,
+  Suspense,
+} from "react";
 import { pivotToLongRideAlight } from "../lib/fileParser";
-import { LongData } from "../lib/types";
 import {
   Select,
   SelectContent,
@@ -9,32 +13,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { DataTable } from "./DataTable";
 import { Loader2 } from "lucide-react";
 import { VirtualizedCombobox } from "./ui/combobox";
+import { Button } from "./ui/button";
+import type { ApexOptions } from "apexcharts";
+
+const Chart = React.lazy(() => import("react-apexcharts"));
 
 const Dashboard: React.FC = () => {
-  const [parsedData, setParsedData] = useState<Record<string, any>[]>([]);
-  const [routes, setRoutes] = useState<string[]>([]);
-  const [stations, setStations] = useState<string[]>([]);
+  const [parsedData, setParsedData] = useState<Record<string, string>[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [chartType, setChartType] = useState<"bar" | "line">("bar");
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [filteredData, setFilteredData] = useState<LongData[]>([]);
+
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoadingInitialData(true);
       try {
         const response = await fetch("/data.json");
         if (!response.ok) {
@@ -43,9 +42,12 @@ const Dashboard: React.FC = () => {
         const jsonData = await response.json();
         if (!jsonData || jsonData.length === 0) {
           setError("JSON 파일을 파싱했지만 데이터가 비어 있습니다.");
+          setIsLoadingInitialData(false);
           return;
         }
-        setParsedData(jsonData);
+        startTransition(() => {
+          setParsedData(jsonData);
+        });
       } catch (e) {
         console.error("데이터 로딩 중 오류 발생:", e);
         if (e instanceof Error) {
@@ -53,47 +55,49 @@ const Dashboard: React.FC = () => {
         } else {
           setError("알 수 없는 오류가 발생했습니다.");
         }
+        setIsLoadingInitialData(false);
       }
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (parsedData.length > 0 && !isPending) {
+      setIsLoadingInitialData(false);
+    }
+  }, [parsedData, isPending]);
 
   const longData = useMemo(() => {
     if (!parsedData || parsedData.length === 0) return [];
     return pivotToLongRideAlight(parsedData, ["노선번호", "노선명", "역명"]);
   }, [parsedData]);
 
-  useEffect(() => {
-    if (longData.length > 0) {
-      setFilteredData(longData); // Set initial data
-      const uniqueRoutes = [
-        ...new Set(longData.map((d) => d["노선번호"] as string)),
-      ].filter(Boolean);
-      const uniqueStations = [
-        ...new Set(longData.map((d) => d["역명"] as string)),
-      ].filter(Boolean);
-      setRoutes(uniqueRoutes.sort());
-      setStations(uniqueStations.sort());
-    }
+  const routes = useMemo(() => {
+    if (longData.length === 0) return [];
+    const uniqueRoutes = [
+      ...new Set(longData.map((d) => d["노선번호"] as string)),
+    ].filter(Boolean);
+    return uniqueRoutes.sort();
   }, [longData]);
 
-  useEffect(() => {
-    if (longData.length === 0) return;
+  const stations = useMemo(() => {
+    if (longData.length === 0) return [];
+    const uniqueStations = [
+      ...new Set(longData.map((d) => d["역명"] as string)),
+    ].filter(Boolean);
+    return uniqueStations.sort();
+  }, [longData]);
 
-    setIsFiltering(true);
-    const timer = setTimeout(() => {
-      let filtered = longData;
-      if (selectedRoute) {
-        filtered = filtered.filter((d) => d["노선번호"] === selectedRoute);
-      }
-      if (selectedStation) {
-        filtered = filtered.filter((d) => d["역명"] === selectedStation);
-      }
-      setFilteredData(filtered);
-      setIsFiltering(false);
-    }, 0);
-
-    return () => clearTimeout(timer);
+  const filteredData = useMemo(() => {
+    if (longData.length === 0) return [];
+    let filtered = longData;
+    if (selectedRoute) {
+      filtered = filtered.filter((d) => d["노선번호"] === selectedRoute);
+    }
+    if (selectedStation) {
+      filtered = filtered.filter((d) => d["역명"] === selectedStation);
+    }
+    return filtered;
   }, [longData, selectedRoute, selectedStation]);
 
   const chartData = useMemo(() => {
@@ -120,8 +124,68 @@ const Dashboard: React.FC = () => {
   }, [filteredData]);
 
   const stationOptions = useMemo(() => {
-    return stations.map(station => ({ value: station, label: station }));
+    return stations.map((station) => ({ value: station, label: station }));
   }, [stations]);
+
+  const chartOptions: ApexOptions = useMemo(() => {
+    return {
+      chart: {
+        type: chartType,
+        height: 400,
+        animations: {
+          enabled: true,
+        },
+        toolbar: {
+          show: false,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: chartData.map((d) => d.time),
+        title: {
+          text: "시간",
+        },
+      },
+      yaxis: {
+        title: {
+          text: "인원수",
+        },
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+      },
+      legend: {
+        position: "top",
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "55%",
+        },
+      },
+      stroke: {
+        width: chartType === 'line' ? 3 : 1,
+      }
+    };
+  }, [chartData, chartType]);
+
+  const chartSeries = useMemo(() => {
+    return [
+      {
+        name: "승차",
+        data: chartData.map((d) => d.boarding),
+      },
+      {
+        name: "하차",
+        data: chartData.map((d) => d.alighting),
+      },
+    ];
+  }, [chartData]);
+
+  const showOverallLoading = isLoadingInitialData || isPending;
 
   if (error) {
     return (
@@ -133,7 +197,12 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 relative">
+      {showOverallLoading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 rounded-lg">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      )}
       <h1 className="text-2xl font-bold mb-4">버스 승하차 데이터 분석</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -171,28 +240,46 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {isFiltering && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-30 rounded-lg">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          </div>
-        )}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">시간대별 승하차 인원</h2>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="boarding" fill="#8884d8" name="승차" />
-              <Bar dataKey="alighting" fill="#82ca9d" name="하차" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold">시간대별 승하차 인원</h2>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant={chartType === "bar" ? "secondary" : "ghost"}
+                size="sm"
+                className="border w-16"
+                onClick={() => setChartType("bar")}
+              >
+                막대
+              </Button>
+              <Button
+                variant={chartType === "line" ? "secondary" : "ghost"}
+                size="sm"
+                className="border w-16"
+                onClick={() => setChartType("line")}
+              >
+                선
+              </Button>
+            </div>
+          </div>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            }
+          >
+            <Chart
+              options={chartOptions}
+              series={chartSeries}
+              type={chartType}
+              height={400}
+            />
+          </Suspense>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-2">상세 데이터</h2>
-          <DataTable rows={filteredData.slice(0, 500)} />
+          <DataTable rows={filteredData} />
         </div>
       </div>
     </div>

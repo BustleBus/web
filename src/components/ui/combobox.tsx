@@ -37,7 +37,7 @@ export function VirtualizedCombobox({
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
 
-  const allOption: ComboboxOption = { value: "__ALL__", label: "모두 보기" };
+  const allOption: ComboboxOption = React.useMemo(() => ({ value: "__ALL__", label: "모두 보기" }), []);
 
   const filteredOptions = React.useMemo(() => {
     const baseOptions = search
@@ -46,7 +46,7 @@ export function VirtualizedCombobox({
         )
       : options;
     return [allOption, ...baseOptions];
-  }, [options, search]);
+  }, [options, search, allOption]);
 
   const parentRef = React.useRef<HTMLDivElement>(null)
 
@@ -74,7 +74,7 @@ export function VirtualizedCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant="secondary"
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"

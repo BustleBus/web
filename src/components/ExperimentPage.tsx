@@ -1,4 +1,10 @@
-import { useMemo, useState, useEffect } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useTransition,
+  Suspense,
+} from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,26 +18,22 @@ import {
 } from "@/components/ui/select";
 import {
   VirtualizedCombobox,
-  type ComboboxOption,
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
-import { BarChart2 } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
+import { BarChart2, Loader2 } from "lucide-react";
 import type { ParsedFile, LongData } from "@/lib/types";
 import { pivotToLong } from "@/lib/fileParser";
 import { DataTable } from "@/components/DataTable";
 import { FileLoader } from "@/components/FileLoader";
+import type { ApexOptions } from "apexcharts";
+
+const Chart = React.lazy(() => import("react-apexcharts"));
+
+const LoadingSpinner = () => (
+  <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 /**
  * 버스 배차 데이터 뷰어 (단일 파일 컴포넌트)
@@ -49,6 +51,7 @@ import { FileLoader } from "@/components/FileLoader";
 export default function ExperimentPage() {
   const [files, setFiles] = useState<ParsedFile[]>([]); // {name, kind, data}
   const [testGroup, setTestGroup] = useState<'A' | 'B'>('A');
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setTestGroup(Math.random() < 0.5 ? 'A' : 'B');
@@ -169,6 +172,66 @@ export default function ExperimentPage() {
     stopPivotAlight,
   ]);
 
+  const chartOptions: ApexOptions = useMemo(() => {
+    const sortedData = timeSeries.sort((a, b) => a.time.localeCompare(b.time));
+    return {
+      chart: {
+        type: testGroup === "A" ? "line" : "bar",
+        height: "100%",
+        animations: {
+          enabled: true,
+        },
+        toolbar: {
+          show: false,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: sortedData.map((d) => d.time),
+        title: {
+          text: "시간",
+        },
+      },
+      yaxis: {
+        title: {
+          text: "합계",
+        },
+        labels: {
+          formatter: (value) => {
+            return Math.round(value).toString();
+          },
+        },
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+      },
+      legend: {
+        position: "top",
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+        },
+      },
+      stroke: {
+        width: testGroup === 'A' ? 3 : 1,
+      }
+    };
+  }, [timeSeries, testGroup]);
+
+  const chartSeries = useMemo(() => {
+    const sortedData = timeSeries.sort((a, b) => a.time.localeCompare(b.time));
+    return [
+      {
+        name: "합계",
+        data: sortedData.map((d) => d.value),
+      },
+    ];
+  }, [timeSeries]);
+
   // 시간대별 CSV 표시 (선택)
   const [activeTimeFile, setActiveTimeFile] = useState("");
   const activeTimeRows = useMemo(() => {
@@ -178,11 +241,13 @@ export default function ExperimentPage() {
   }, [activeTimeFile, timeFiles]);
 
   const onFilesLoaded = (parsed: ParsedFile[]) => {
-    setFiles((prev) => {
-      // 동일 이름 덮어쓰기
-      const map = new Map(prev.map((p) => [p.name, p]));
-      for (const p of parsed) map.set(p.name, p);
-      return Array.from(map.values());
+    startTransition(() => {
+      setFiles((prev) => {
+        // 동일 이름 덮어쓰기
+        const map = new Map(prev.map((p) => [p.name, p]));
+        for (const p of parsed) map.set(p.name, p);
+        return Array.from(map.values());
+      });
     });
   };
 
@@ -198,7 +263,8 @@ export default function ExperimentPage() {
 
       <FileLoader onLoaded={onFilesLoaded} />
 
-      <Tabs defaultValue="route" className="w-full">
+      <Tabs defaultValue="route" className="w-full relative">
+        {isPending && <LoadingSpinner />}
         <TabsList className="grid grid-cols-3 w-full max-w-xl">
           <TabsTrigger value="route">노선 기반</TabsTrigger>
           <TabsTrigger value="stop">정류장 기반</TabsTrigger>
@@ -281,37 +347,20 @@ export default function ExperimentPage() {
                 시간대 추이
               </h3>
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  {testGroup === 'A' ? (
-                    <LineChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        name="합계"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  ) : (
-                    <BarChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="합계" fill="#8884d8" />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center items-center h-full">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  }
+                >
+                  <Chart
+                    options={chartOptions}
+                    series={chartSeries}
+                    type={testGroup === "A" ? "line" : "bar"}
+                    height="100%"
+                  />
+                </Suspense>
               </div>
             </Card>
           </div>
@@ -379,37 +428,20 @@ export default function ExperimentPage() {
                 시간대 추이
               </h3>
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  {testGroup === 'A' ? (
-                    <LineChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        name="합계"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  ) : (
-                    <BarChart
-                      data={timeSeries.sort((a, b) => a.time.localeCompare(b.time))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="합계" fill="#8884d8" />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center items-center h-full">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  }
+                >
+                  <Chart
+                    options={chartOptions}
+                    series={chartSeries}
+                    type={testGroup === "A" ? "line" : "bar"}
+                    height="100%"
+                  />
+                </Suspense>
               </div>
             </Card>
           </div>
