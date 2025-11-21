@@ -1,3 +1,17 @@
+export interface BusData {
+  time: string;
+  stopName: string;
+  routeNo: number;
+  vehicleNo: string;
+  crowd: number;
+}
+
+export interface BusDataResponse {
+  status: string;
+  count: number;
+  data: BusData[];
+}
+
 export type FileKind =
   | "stop_pivot_board"
   | "stop_pivot_alight"
@@ -20,4 +34,3 @@ export interface LongData {
   type: "boarding" | "alighting";
   [key: string]: string | number;
 }
-

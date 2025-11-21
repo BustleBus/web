@@ -57,6 +57,11 @@ export function VirtualizedCombobox({
     overscan: 5,
   })
 
+  // Force virtualizer to remeasure when options change
+  React.useEffect(() => {
+    virtualizer.measure()
+  }, [filteredOptions, virtualizer])
+
   const handleSelect = (currentValue: string | null) => {
     if (onSelect) {
       if (currentValue === allOption.value) {

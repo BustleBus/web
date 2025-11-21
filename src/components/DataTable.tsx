@@ -2,11 +2,11 @@ import React from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 // 간단 데이터 테이블 (가상화 적용 - 일반 흐름 방식)
-export function DataTable({
+export function DataTable<T extends Record<string, any>>({
   rows,
   maxHeight = 420,
 }: {
-  rows: Record<string, string | number>[];
+  rows: T[];
   maxHeight?: number;
 }) {
   const parentRef = React.useRef<HTMLDivElement>(null);
@@ -72,14 +72,36 @@ export function DataTable({
                 ref={rowVirtualizer.measureElement} // 동적 높이 측정이 필요할 경우 사용
                 className={virtualItem.index % 2 === 0 ? "" : "bg-muted/30"}
               >
-                {cols.map((c) => (
-                  <td
-                    key={c}
-                    className="px-3 py-1.5 whitespace-nowrap border-b overflow-hidden text-ellipsis"
-                  >
-                    {String(row[c] ?? "")}
-                  </td>
-                ))}
+                {cols.map((c) => {
+                  let displayValue = row[c] ?? "";
+                  
+                  // Format time column for better readability
+                  if (c === "time" && row[c]) {
+                    try {
+                      const date = new Date(row[c]);
+                      displayValue = date.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                      });
+                    } catch (e) {
+                      displayValue = String(row[c]);
+                    }
+                  }
+                  
+                  return (
+                    <td
+                      key={c}
+                      className="px-3 py-1.5 whitespace-nowrap border-b overflow-hidden text-ellipsis"
+                    >
+                      {String(displayValue)}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}

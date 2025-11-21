@@ -1,0 +1,241 @@
+export interface StationInfo {
+  idx: number;
+  stationName: string;
+  x: number;
+  y: number;
+}
+
+export interface BusRouteInfo {
+  location: string;
+  busID: number;
+  busNo: string;
+  busOrigin: string;
+  busStartPoint: string;
+  busEndPoint: string;
+  busFirstTime: string;
+  busLastTime: string;
+  busInterval: string;
+  bus_Interval_Week: string;
+  bus_Interval_Sat: string;
+  bus_Interval_Sun: string;
+  stations: StationInfo[];
+}
+
+export interface StationDataResponse {
+  success: boolean;
+  result: BusRouteInfo[];
+}
+
+export const STATION_DATA: StationDataResponse = {
+  "success": true,
+  "result": [
+    {
+      "location": "덕산아파트/대아중고등학교 → 공영차고지 (130(공영차고지방면))",
+      "busID": 2040148,
+      "busNo": "130",
+      "busOrigin": "130(공영차고지방면)",
+      "busStartPoint": "덕산아파트/대아중고등학교",
+      "busEndPoint": "공영차고지",
+      "busFirstTime": "06:10",
+      "busLastTime": "23:00",
+      "busInterval": "101회 -",
+      "bus_Interval_Week": "101회 -",
+      "bus_Interval_Sat": "97회 -",
+      "bus_Interval_Sun": "97회 -",
+      "stations": [
+        {
+          "idx": 0,
+          "stationName": "덕산아파트/대아중고등학교",
+          "x": 128.057192,
+          "y": 35.188449
+        },
+        {
+          "idx": 1,
+          "stationName": "대아중고등학교",
+          "x": 128.058182,
+          "y": 35.190576
+        },
+        {
+          "idx": 2,
+          "stationName": "이현주공아파트",
+          "x": 128.06039,
+          "y": 35.191116
+        },
+        {
+          "idx": 3,
+          "stationName": "촉석초등학교사거리",
+          "x": 128.06308,
+          "y": 35.191782
+        },
+        {
+          "idx": 4,
+          "stationName": "이현상가",
+          "x": 128.065596,
+          "y": 35.192411
+        },
+        {
+          "idx": 5,
+          "stationName": "오죽광장",
+          "x": 128.068935,
+          "y": 35.193419
+        },
+        {
+          "idx": 6,
+          "stationName": "서부농협하나로마트",
+          "x": 128.069035,
+          "y": 35.195483
+        },
+        {
+          "idx": 7,
+          "stationName": "진주보건대학교/경진고등학교",
+          "x": 128.0694,
+          "y": 35.197773
+        },
+        {
+          "idx": 8,
+          "stationName": "상봉아파트",
+          "x": 128.07175,
+          "y": 35.198411
+        },
+        {
+          "idx": 9,
+          "stationName": "진주여자고등학교사거리",
+          "x": 128.076089,
+          "y": 35.199491
+        },
+        {
+          "idx": 10,
+          "stationName": "진주여자고등학교",
+          "x": 128.077891,
+          "y": 35.199913
+        },
+        {
+          "idx": 11,
+          "stationName": "상봉현장민원실",
+          "x": 128.079185,
+          "y": 35.1981
+        },
+        {
+          "idx": 12,
+          "stationName": "갤러리아백화점",
+          "x": 128.081534,
+          "y": 35.196864
+        },
+        {
+          "idx": 13,
+          "stationName": "중앙시장(우리은행)",
+          "x": 128.083673,
+          "y": 35.194509
+        },
+        {
+          "idx": 14,
+          "stationName": "농협중앙지점",
+          "x": 128.084647,
+          "y": 35.191886
+        },
+        {
+          "idx": 15,
+          "stationName": "포시즌",
+          "x": 128.086838,
+          "y": 35.187278
+        },
+        {
+          "idx": 16,
+          "stationName": "천전시장",
+          "x": 128.088153,
+          "y": 35.184626
+        },
+        {
+          "idx": 17,
+          "stationName": "진주세무서",
+          "x": 128.089161,
+          "y": 35.182597
+        },
+        {
+          "idx": 18,
+          "stationName": "진주남중학교/제일병원",
+          "x": 128.090541,
+          "y": 35.179784
+        },
+        {
+          "idx": 19,
+          "stationName": "한주럭키타운아파트",
+          "x": 128.09225,
+          "y": 35.176294
+        },
+        {
+          "idx": 20,
+          "stationName": "세란병원",
+          "x": 128.093105,
+          "y": 35.174599
+        },
+        {
+          "idx": 21,
+          "stationName": "금호석류/은빛한보아파트",
+          "x": 128.094638,
+          "y": 35.171451
+        },
+        {
+          "idx": 22,
+          "stationName": "연암공과대학교",
+          "x": 128.105695,
+          "y": 35.164636
+        },
+        {
+          "idx": 23,
+          "stationName": "가좌주공아파트",
+          "x": 128.106536,
+          "y": 35.161535
+        },
+        {
+          "idx": 24,
+          "stationName": "개양오거리",
+          "x": 128.107421,
+          "y": 35.157982
+        },
+        {
+          "idx": 25,
+          "stationName": "경상국립대학교가좌캠퍼스후문",
+          "x": 128.106967,
+          "y": 35.15535
+        },
+        {
+          "idx": 26,
+          "stationName": "경상국립대학교가좌캠퍼스정문",
+          "x": 128.104592,
+          "y": 35.151891
+        },
+        {
+          "idx": 27,
+          "stationName": "가좌주공그린빌",
+          "x": 128.101023,
+          "y": 35.150298
+        },
+        {
+          "idx": 28,
+          "stationName": "율곡입구",
+          "x": 128.094699,
+          "y": 35.149005
+        },
+        {
+          "idx": 29,
+          "stationName": "대동2",
+          "x": 128.092703,
+          "y": 35.150341
+        },
+        {
+          "idx": 30,
+          "stationName": "대동1",
+          "x": 128.089917,
+          "y": 35.15138
+        },
+        {
+          "idx": 31,
+          "stationName": "공영차고지",
+          "x": 128.085002,
+          "y": 35.153899
+        }
+      ]
+    }
+  ]
+};
