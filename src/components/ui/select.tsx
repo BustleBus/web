@@ -70,7 +70,7 @@ const SelectContent = ({ children, className, ...props }: { children: React.Reac
   return (
     <div
       className={cn(
-        "absolute z-20 min-w-[8rem] overflow-hidden rounded-md border bg-white text-popover-foreground shadow-md animate-in fade-in-80 max-h-60 overflow-y-auto",
+        "absolute z-50 w-full min-w-[8rem] overflow-hidden rounded-md border bg-white text-popover-foreground shadow-md animate-in fade-in-80 max-h-60 overflow-y-auto",
         className
       )}
       {...props}

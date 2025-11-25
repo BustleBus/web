@@ -82,9 +82,9 @@ export function VirtualizedCombobox({
           variant="secondary"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between border-2 hover:border-primary transition-colors"
         >
-          {selectedOption ? selectedOption.label : placeholder || "Select an option"}
+          {selectedOption ? selectedOption.label : (value ? placeholder : "📍 전체") || "Select an option"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

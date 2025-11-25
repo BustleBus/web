@@ -22,7 +22,6 @@ import {
   BarChart3,
   Activity
 } from "lucide-react";
-import { VirtualizedCombobox } from "./ui/combobox";
 import { Button } from "./ui/button";
 import type { ApexOptions } from "apexcharts";
 import type { BusData, BusDataResponse } from "../lib/types";
@@ -253,9 +252,7 @@ const Dashboard: React.FC = () => {
     }
   }, [filteredData, viewMode, selectedStation, stations]);
 
-  const stationOptions = useMemo(() => {
-    return stations.map((station) => ({ value: station, label: station }));
-  }, [stations]);
+
 
   const chartOptions: ApexOptions = useMemo(() => {
     const commonOptions: ApexOptions = {
@@ -263,6 +260,7 @@ const Dashboard: React.FC = () => {
         height: viewMode === 'heatmap' ? 800 : 400, // Taller for heatmap
         animations: { enabled: true },
         toolbar: { show: false },
+        offsetX: 20, // Add offset to prevent y-axis clipping
       },
       dataLabels: { enabled: false },
       tooltip: { shared: true, intersect: false },
@@ -278,7 +276,15 @@ const Dashboard: React.FC = () => {
             title: { text: '시간' }
         },
         yaxis: {
-            title: { text: '정류장' }
+            title: { 
+              text: '정류장',
+              rotate: -90,
+            },
+            labels: {
+              minWidth: 100,
+              maxWidth: 200,
+              rotate: -90,
+            }
         },
         plotOptions: {
           heatmap: {
@@ -330,7 +336,12 @@ const Dashboard: React.FC = () => {
       yaxis: {
         title: {
           text: "혼잡도",
+          rotate: -90,
         },
+        labels: {
+          minWidth: 40,
+          rotate: -90,
+        }
       },
       plotOptions: {
         bar: {
@@ -511,7 +522,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Filter Controls */}
-        <div className="card-modern p-6 mb-8 animate-fade-in">
+        <div className="card-modern p-6 mb-8 animate-fade-in relative z-10">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             필터 설정
@@ -561,14 +572,22 @@ const Dashboard: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 정류장 선택
               </label>
-              <VirtualizedCombobox
-                options={stationOptions}
+              <Select
+                onValueChange={(value) => setSelectedStation(value || null)}
                 value={selectedStation || ""}
-                onSelect={setSelectedStation}
-                placeholder="정류장을 선택하세요..."
-                searchPlaceholder="정류장 검색..."
-                noResultsMessage="검색 결과가 없습니다."
-              />
+              >
+                <SelectTrigger className="border-2 hover:border-primary transition-colors">
+                  <span className="block truncate">{selectedStation || "📍 전체"}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">전체</SelectItem>
+                  {stations.map((station) => (
+                    <SelectItem key={station} value={station}>
+                      {station}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
