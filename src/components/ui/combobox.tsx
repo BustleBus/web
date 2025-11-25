@@ -57,10 +57,15 @@ export function VirtualizedCombobox({
     overscan: 5,
   })
 
-  // Force virtualizer to remeasure when options change
+  // Remeasure when options change or popover opens
   React.useEffect(() => {
-    virtualizer.measure()
-  }, [filteredOptions, virtualizer])
+    if (open) {
+      // Wait for DOM to be ready
+      requestAnimationFrame(() => {
+        virtualizer.measure()
+      })
+    }
+  }, [open, filteredOptions, virtualizer])
 
   const handleSelect = (currentValue: string | null) => {
     if (onSelect) {
@@ -118,7 +123,7 @@ export function VirtualizedCombobox({
                   <div
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
-                    className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent"
+                    className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent cursor-pointer"
                     style={{
                       position: "absolute",
                       top: 0,
