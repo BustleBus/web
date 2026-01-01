@@ -275,6 +275,9 @@ const Dashboard: React.FC = () => {
         chart: { ...commonOptions.chart, type: 'heatmap' },
         xaxis: {
             type: 'category',
+            categories: (chartData as any[]).length > 0 && (chartData as any[])[0].data 
+              ? (chartData as any[])[0].data.map((d: any) => d.x) 
+              : [],
             title: { text: '시간' }
         },
         yaxis: {
