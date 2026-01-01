@@ -32,7 +32,7 @@
 ![BustleBus Dashboard Demo](./readmeImg/architecture.png)
 
 ## 📺 UI / Demo
->**https://web-ten-nu-64.vercel.app/** <br>
+># **https://web-ten-nu-64.vercel.app/** <br>
 
 | **메인 대시보드 (Overview)** | **상세 데이터 (List View)** |
 | :---: | :---: |
