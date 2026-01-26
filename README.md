@@ -2,7 +2,7 @@
 지방 도시의 고유한 교통 문제를 Unity 시뮬레이션 데이터와 YOLO 모델로 해결한 실시간 버스 혼잡도 모니터링 대시보드
 
 ## Repositories
-* 🖥 **Frontend**: [BustleBus-frontend](https://github.com/BustleBus/BustleBus-frontend)
+* 🖥 **App**: [BustleBus-frontend](https://github.com/BustleBus/BustleBus-frontend)
 * ⚙️ **Backend**: [BustleBus-backend](https://github.com/BustleBus/BustleBus-backend)
 * 🎮 **Simulation**: [BustleBus-Unity](https://github.com/BustleBus/BustleBus-Unity)
 
