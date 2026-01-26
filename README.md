@@ -1,11 +1,38 @@
 # 📊 BustleBus Web Dashboard
+지방 도시의 고유한 교통 문제를 Unity 시뮬레이션 데이터와 YOLO 모델로 해결한 실시간 버스 혼잡도 모니터링 대시보드
 
-> **React + Vite + TailwindCSS 기반 실시간 버스 데이터 시각화 대시보드 (Web Frontend)** <br>
->버스 혼잡도 데이터 모니터링 및 대용량 로그 시각화 관리 시스템
+## Repositories
+* 🖥 **Frontend**: [BustleBus-frontend](https://github.com/BustleBus/BustleBus-frontend)
+* ⚙️ **Backend**: [BustleBus-backend](https://github.com/BustleBus/BustleBus-backend)
+* 🎮 **Simulation**: [BustleBus-Unity](https://github.com/BustleBus/BustleBus-Unity)
 
-버슬버스 프로젝트의 웹 파트는 실시간으로 수집되는 대량의 버스 운행 데이터와 혼잡도 통계를 관리자에게 시각적으로 전달하는 대시보드 역할을 수행합니다. 수천 건 이상의 로그 데이터를 브라우저 부하 없이 매끄럽게 렌더링하기 위한 성능 최적화에 초점을 맞추어 개발되었습니다.
+## 🚍 프로젝트 배경
+1. 실생활의 불편함: "정류장을 지나치는 버스"
+학창 시절부터 대학생까지 경남 진주시에서 등하교하며, 하나의 노선이 6개가 넘는 중·고·대학교를 통과하는 현장을 지켜보았습니다. 피크 타임마다 버스는 늘 포화 상태였고, 노선 중간 지점에서는 버스가 꽉 차서 기사가 정류장을 무정차로 통과하는 상황이 빈번했습니다. "다음 버스는 탈 수 있을까?"라는 시민들의 막연한 불안함을 해결하고 싶었습니다.
 
-## 🛠 Built With (Tech Stack)
+2. 데이터의 공백: 지방 버스 시스템의 한계
+서울이나 광역시와 달리, 많은 지방 도시는 단일 요금제를 채택하고 있습니다. 환승이 아니면 하차 시 카드를 찍지 않기 때문에, 버스 운영사는 '어디서 사람이 많이 내리는지'에 대한 정확한 데이터를 수집하기 어렵습니다. 데이터가 없으니 배차 간격 조절이 비효율적으로 이루어지는 악순환이 발생합니다.
+
+3. 솔루션: 카메라 기반의 지능형 혼잡도 파악
+카드 태그 데이터에 의존할 수 없다면 버스 내부의 시각 정보(CCTV)를 활용해야 한다고 판단했습니다.
+
+사용자 측면: 실시간 혼잡도를 확인하여 "이번 버스를 탈 수 있을지" 판단 근거 제공
+
+운영사 측면: 구간별 실제 탑승 인원 데이터를 기반으로 효율적인 배차 계획 수립 지원
+
+---
+## 🛠 기술적 접근 방식: 제약 조건 극복
+
+### 🧊 Unity 3D 기반 가상 환경 구축
+* **환경 모델링**: 실제 버스 내부 구조와 시트 배치, 정류장 환경을 Unity로 정교하게 구현
+* **데이터 생성**: 다양한 캐릭터 에셋을 활용해 혼잡도별 시나리오를 연출하고, 개인정보 저촉 없는 학습용 이미지 데이터셋 확보
+
+### 👁 YOLO 기반 객체 인식 및 혼잡도 분석
+* Unity에서 추출한 이미지를 **YOLO** 모델로 학습시켜 실시간 승객 수와 위치 파악
+* 법적 한계를 넘어선 기술적 실효성을 검증하고 해결책을 제시하는 **솔루션 제안형 캡스톤 디자인** 수행
+
+---
+## 🛠 기술스택
 
 ### Core
 - ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
